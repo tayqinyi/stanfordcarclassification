@@ -56,10 +56,47 @@ def import_image(filename, label, box):
 
 train_data = tf.data.Dataset.from_tensor_slices((tf.constant(train_features['fname']),
                                                  tf.constant(train_labels),
-                                                 tf.constant(train_features[['bbox_x1', 'bbox_y1', 'width', 'height']])))\
-    .map(import_image).shuffle(buffer_size=10000).batch(BATCH_SIZE)
+                                                 tf.constant(train_features[['bbox_x1', 'bbox_y1', 'width', 'height']].values)))\
+    .map(import_image).shuffle(buffer_size=1000).batch(BATCH_SIZE)
 
-train_data = tf.data.Dataset.from_tensor_slices((tf.constant(test_features['fname']),
-                                                 tf.constant(test_labels),
-                                                 tf.constant(test_features[['bbox_x1', 'bbox_y1', 'width', 'height']])))\
-    .map(import_image).shuffle(buffer_size=10000).batch(BATCH_SIZE)
+test_data = tf.data.Dataset.from_tensor_slices((tf.constant(test_features['fname']),
+                                                tf.constant(test_labels),
+                                                tf.constant(test_features[['bbox_x1', 'bbox_y1', 'width', 'height']].values)))\
+    .map(import_image).shuffle(buffer_size=1000).batch(BATCH_SIZE)
+
+'''
+Models
+'''
+IMG_SHAPE = (IMAGE_SIZE, IMAGE_SIZE, 3)
+
+base_model = tf.keras.applications.MobileNetV2(input_shape=IMG_SHAPE,
+                                               include_top=False,
+                                               weights='imagenet')
+base_model.trainable = False
+
+maxpool_layer = tf.keras.layers.GlobalMaxPooling2D()
+prediction_layer = tf.keras.layers.Dense(1, activation='softmax')
+model = tf.keras.Sequential([
+    base_model,
+    maxpool_layer,
+    prediction_layer
+])
+
+learning_rate = 0.0001
+
+model.compile(optimizer=tf.keras.optimizers.Adam(lr=learning_rate),
+             loss='categorical_crossentropy',
+             metrics=['accuracy'])
+
+'''
+Train
+'''
+num_epochs = 2
+steps_per_epoch = round(len(train_labels))//BATCH_SIZE
+val_steps = 20
+
+history = model.fit(train_data.repeat(),
+                    epochs=num_epochs,
+                    steps_per_epoch = steps_per_epoch,
+                    validation_data=test_data.repeat(),
+                    validation_steps=val_steps)
