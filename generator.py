@@ -4,18 +4,12 @@ and build generators out of them
 '''
 
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.python.keras.applications.densenet import preprocess_input
 
 # data flow from dataframe
 def BuildGeneratorFromDF(dataframe, directory, splitratio, imagesize, batchsize):
     train_datagen = ImageDataGenerator(rescale=1. / 255,
-                                       #shear_range=0.2,
-                                       zoom_range=0.2,
-                                       #fill_mode = 'constant',
-                                       #cval = 1,
-                                       rotation_range = 5,
-                                       #width_shift_range=0.2,
-                                       #height_shift_range=0.2,
-                                       horizontal_flip=True,
+                                       preprocessing_function=preprocess_input,
                                        validation_split=splitratio)
 
     test_datagen = ImageDataGenerator(rescale=1/255,)
