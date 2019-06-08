@@ -6,8 +6,12 @@ from pathlib import Path
 import scipy.io as sio
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
-import tensorflow as tf
+from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.python.keras.applications import densenet
+from tensorflow.python.keras import regularizers
+from tensorflow.python.keras.models import Model
+from tensorflow.python.keras.layers import Dense, Activation
+from tensorflow.python.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint, Callback
 
 # Datapath, change it to the local data path
 # Note, I extracted cars_test, cars_train and
@@ -15,9 +19,12 @@ import tensorflow as tf
 dataPath = Path(r'data')
 TRAIN_FOLDER = Path(r'cars_train')
 TEST_FOLDER = Path(r'cars_test')
+MODEL = Path(r'models')
 DEVKIT = Path(r'devkit')
 BATCH_SIZE = 128
-IMAGE_SIZE = 100
+IMAGE_SIZE = 224
+TRAIN_TEST_RATIO = 0.3
+epochs = 10
 
 # Read output file annotation
 # Change the datapath here
@@ -32,71 +39,67 @@ train_df = pd.DataFrame();
 trainFields = ['bbox_x1', 'bbox_y1', 'bbox_x2', 'bbox_y2', 'class', 'fname']
 for field in trainFields:
     train_df[field] = np.ravel((trainMetaContents['annotations'][field]).tolist())
+train_df['class']=train_df['class'].astype(str)
 
-# Image width, height
-train_df['width'], train_df['height'] = train_df['bbox_x2'] - train_df['bbox_x1'], train_df['bbox_y2'] - train_df['bbox_y1']
-train_df['fname'] = [str(Path.joinpath(dataPath, TRAIN_FOLDER, fname)) for fname in train_df['fname']]
+# data flow from dataframe
+train_datagen = ImageDataGenerator(rescale=1. / 255,
+                                   #shear_range=0.2,
+                                   zoom_range=0.2,
+                                   #fill_mode = 'constant',
+                                   #cval = 1,
+                                   rotation_range = 5,
+                                   #width_shift_range=0.2,
+                                   #height_shift_range=0.2,
+                                   horizontal_flip=True,
+                                   validation_split=TRAIN_TEST_RATIO)
 
-# Train test split
-train_features, test_features, train_labels, test_labels = train_test_split(train_df[['fname', 'bbox_x1', 'bbox_y1', 'width', 'height']],
-                                                                            train_df['class'],  # labels
-                                                                            train_size=0.7,
-                                                                            random_state=0)     # randomize the data
+test_datagen = ImageDataGenerator(rescale=1/255,)
 
-def import_image(filename, label, box):
-    box = tf.cast(box, tf.int32);
-    image = tf.io.read_file(filename)
-    image = tf.image.decode_jpeg(image)
-    image = tf.image.per_image_standardization(image)
-    image = tf.image.crop_to_bounding_box(image, box[1], box[0],
-                                          box[3], box[2]) # Crop according to the box coordinates in mat file
-    image = tf.image.resize(image, (IMAGE_SIZE, IMAGE_SIZE))
+train_generator = train_datagen.flow_from_dataframe( dataframe=train_df,
+                                                     directory=Path.joinpath(dataPath, TRAIN_FOLDER),
+                                                     x_col='fname',
+                                                     y_col='class',
+                                                     target_size=(IMAGE_SIZE, IMAGE_SIZE),
+                                                     class_mode='categorical',
+                                                     batch_size=BATCH_SIZE,
+                                                     subset='training')
 
-    return image, label
+validation_generator = train_datagen.flow_from_dataframe( dataframe=train_df,
+                                                          directory=Path.joinpath(dataPath, TRAIN_FOLDER),
+                                                          x_col='fname',
+                                                          y_col='class',
+                                                          target_size=(IMAGE_SIZE, IMAGE_SIZE),
+                                                          class_mode='categorical',
+                                                          batch_size=BATCH_SIZE,
+                                                          subset='validation')
 
-train_data = tf.data.Dataset.from_tensor_slices((tf.constant(train_features['fname']),
-                                                 tf.constant(train_labels),
-                                                 tf.constant(train_features[['bbox_x1', 'bbox_y1', 'width', 'height']].values)))\
-    .map(import_image).shuffle(buffer_size=1000).batch(BATCH_SIZE)
 
-test_data = tf.data.Dataset.from_tensor_slices((tf.constant(test_features['fname']),
-                                                tf.constant(test_labels),
-                                                tf.constant(test_features[['bbox_x1', 'bbox_y1', 'width', 'height']].values)))\
-    .map(import_image).shuffle(buffer_size=1000).batch(BATCH_SIZE)
+def build_model():
+    base_model = densenet.DenseNet121(input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3),
+                                      include_top=False,
+                                      pooling='avg')
+    for layer in base_model.layers:
+        layer.trainable = True
 
-'''
-Models
-'''
-IMG_SHAPE = (IMAGE_SIZE, IMAGE_SIZE, 3)
+    x = base_model.output
+    x = Dense(1000, kernel_regularizer=regularizers.l1_l2(0.01), activity_regularizer=regularizers.l2(0.01))(x)
+    x = Activation('relu')(x)
+    x = Dense(500, kernel_regularizer=regularizers.l1_l2(0.01), activity_regularizer=regularizers.l2(0.01))(x)
+    x = Activation('relu')(x)
+    predictions = Dense(len(metaLabels), activation='softmax')(x)
+    model = Model(inputs=base_model.input, outputs=predictions)
 
-base_model = tf.keras.applications.MobileNetV2(input_shape=IMG_SHAPE,
-                                               include_top=False,
-                                               weights='imagenet')
-base_model.trainable = False
+    return model
 
-maxpool_layer = tf.keras.layers.GlobalMaxPooling2D()
-prediction_layer = tf.keras.layers.Dense(1, activation='softmax')
-model = tf.keras.Sequential([
-    base_model,
-    maxpool_layer,
-    prediction_layer
-])
+model = build_model()
+model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['acc', 'mse'])
+early_stop = EarlyStopping(monitor='val_loss', patience=8, verbose=1, min_delta=1e-4, restore_best_weights=True)
+reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=4, verbose=1, min_delta=1e-4)
+callbacks_list = [early_stop, reduce_lr]
 
-learning_rate = 0.0001
-
-model.compile(optimizer=tf.keras.optimizers.Adam(lr=learning_rate),
-             loss='categorical_crossentropy',
-             metrics=['accuracy'])
-
-'''
-Train
-'''
-num_epochs = 2
-steps_per_epoch = round(len(train_labels))//BATCH_SIZE
-val_steps = 20
-
-history = model.fit(train_data.repeat(),
-                    epochs=num_epochs,
-                    steps_per_epoch = steps_per_epoch,
-                    validation_data=test_data.repeat(),
-                    validation_steps=val_steps)
+model_history = model.fit_generator(train_generator,
+                                    steps_per_epoch=len(train_generator.filenames) // BATCH_SIZE,
+                                    epochs=epochs,
+                                    validation_data=validation_generator,
+                                    validation_steps= len(train_generator.filenames) // BATCH_SIZE,
+                                    callbacks=callbacks_list)
