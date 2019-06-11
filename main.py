@@ -34,26 +34,31 @@ TRAIN_FOLDER = Path(r'cars_train')
 TEST_FOLDER = Path(r'cars_test')
 MODEL = Path(r'models')
 DEVKIT = Path(r'devkit')
-BATCH_SIZE = 128
+BATCH_SIZE = 32
 IMAGE_SIZE = 224
-TRAIN_TEST_RATIO = 0.3
-EPOCHS = 10
+TRAIN_TEST_RATIO = 0.25
+EPOCHS = 50
 
 '''
 1. Import data into dataframe (filename, class) and also the meta labels
 '''
-train_df, meta_labels = dataimport.ImportMetaIntoDF(DATA_PATH, DEVKIT)
+train_df, test_df, meta_labels = dataimport.ImportMetaIntoDF(DATA_PATH, DEVKIT, TRAIN_TEST_RATIO)
 # number of classes from the metalabels list taken from cars_train_annos
 n_class=len(meta_labels)
 
 '''
 2. Build generator for keras to flow data based on the filename in the dataframe
 '''
-train_generator, validation_generator = generator.BuildGeneratorFromDF(train_df,
-                                                                       Path.joinpath(DATA_PATH, TRAIN_FOLDER),
-                                                                       splitratio=TRAIN_TEST_RATIO,
-                                                                       imagesize=224,
-                                                                       batchsize=128)
+train_generator = generator.BuildGeneratorFromDF(train_df,
+                                                 Path.joinpath(DATA_PATH, TRAIN_FOLDER),
+                                                 imagesize=224,
+                                                 batchsize=BATCH_SIZE)
+
+validation_generator = generator.BuildGeneratorFromDF(test_df,
+                                                      Path.joinpath(DATA_PATH, TRAIN_FOLDER),
+                                                      imagesize=224,
+                                                      batchsize=BATCH_SIZE)
+
 
 '''
 3. Build a model based on specifications
