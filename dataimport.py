@@ -11,7 +11,7 @@ from PIL import Image
 
 # Read output file annotation
 # Change the datapath here
-def ImportMetaIntoDF(devkit, img_path, cropped_img_path, traintestratio, crop):
+def ImportMetaIntoDF(devkit, img_path, cropped_img_path, crop):
 
     meta_path = Path.joinpath(devkit, r'cars_meta.mat')
     mat_contents = sio.loadmat(meta_path)
@@ -25,7 +25,6 @@ def ImportMetaIntoDF(devkit, img_path, cropped_img_path, traintestratio, crop):
     for field in training_data_fields:
         training_data_df[field] = np.ravel((training_data_meta_contents['annotations'][field]).tolist())
     training_data_df['class']=training_data_df['class'].astype(str)
-    y = training_data_df['class']
 
     # Crop images according to the annos
     if(crop):
@@ -39,12 +38,5 @@ def ImportMetaIntoDF(devkit, img_path, cropped_img_path, traintestratio, crop):
             target_path = Path.joinpath(cropped_img_path, row['fname'])
             image.save(target_path)
 
-    # User sklearn train test split because it ensures class balanced
-    # for e.g., we have 196 image classes, sklearn split will ensure
-    # the train set has all 196 image classes input, whereas keras only
-    # selects the last ratio of samples we specify
-    train_df, test_df, y_train, y_test = train_test_split(training_data_df, y, test_size=traintestratio)
-
-
-    return train_df, test_df, meta_labels
+    return training_data_df
 

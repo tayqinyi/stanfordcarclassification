@@ -12,7 +12,7 @@ To get this script to work
     - cars_train
     -devkit
   - dataimport.py
-  - modelbuild.py
+  - learnerbuild.py
   - main.py
 
 You can then run this script, this script will
@@ -23,7 +23,7 @@ You can then run this script, this script will
 5. Predict the images in the cars_test folder
 '''
 
-import dataimport, generator, modelbuild, modelfit
+import dataimport, datasplit, learnerbuild, learnerfit
 from pathlib import Path
 import argparse, sys
 
@@ -37,35 +37,31 @@ CROPPED_TRAIN_FOLDER = Path.joinpath(DATA_PATH, r'cropped_cars_train')
 CROPPED_TEST_FOLDER = Path.joinpath(DATA_PATH, r'cropped_cars_test')
 MODEL = Path(r'models')
 DEVKIT = Path.joinpath(DATA_PATH, r'devkit')
-BATCH_SIZE = 32
+BATCH_SIZE = 8
 IMAGE_SIZE = 224
 TEST_RATIO = 0.2
-EPOCHS = 500
+EPOCHS = 30
 
 
 def main(args):
 
     # 1. Import data into dataframe (filename, class) and also the meta labels
-    train_df, test_df, meta_labels = dataimport.ImportMetaIntoDF(DEVKIT, TRAIN_FOLDER, CROPPED_TRAIN_FOLDER, TEST_RATIO, args.crop)
+    train_df = dataimport.ImportMetaIntoDF(DEVKIT, TRAIN_FOLDER, CROPPED_TRAIN_FOLDER, args.crop)
     # number of classes from the metalabels list taken from cars_train_annos
-    n_class = len(meta_labels)
+    n_class = len(train_df['class'])
 
-    # 2. Build generator for keras to flow data based on the filename in the dataframe
-    train_generator = generator.BuildGeneratorFromDF(train_df,
-                                                     CROPPED_TRAIN_FOLDER,
-                                                     imagesize=224,
-                                                     batchsize=BATCH_SIZE)
-
-    validation_generator = generator.BuildGeneratorFromDF(test_df,
-                                                          CROPPED_TRAIN_FOLDER,
-                                                          imagesize=224,
-                                                          batchsize=BATCH_SIZE)
+    # 2. Build data split for generator to flow and train test split
+    data = datasplit.data_split(train_df,
+                                CROPPED_TRAIN_FOLDER,
+                                imagesize=224,
+                                batchsize=BATCH_SIZE,
+                                testratio=TEST_RATIO)
 
     # 3. Build a model based on specifications
-    model = modelbuild.build_model(IMAGE_SIZE, n_class)
+    learner = learnerbuild.build_learn(data)
 
     # 4. Fit the model
-    model, model_history = modelfit.fit_model(model, train_generator, validation_generator, EPOCHS, BATCH_SIZE)
+    learnerfit.learn_fit(learner, EPOCHS)
 
 def parse_arguments(argv):
     parser = argparse.ArgumentParser()
