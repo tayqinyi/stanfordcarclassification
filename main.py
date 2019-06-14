@@ -18,7 +18,7 @@ To get this script to work
 You can then run this script, this script will
 1. Import previously download data as data frame
 2. Prepare an Image generator to flow into model
-3. Build a Densenet model
+3. Get a pretrained resnet152 model, attach layers in the back
 4. Fit the model
 5. Predict the images in the cars_test folder
 '''
@@ -35,7 +35,7 @@ TRAIN_FOLDER = Path.joinpath(DATA_PATH, r'cars_train')
 TEST_FOLDER = Path.joinpath(DATA_PATH, r'cars_test')
 CROPPED_TRAIN_FOLDER = Path.joinpath(DATA_PATH, r'cropped_cars_train')
 CROPPED_TEST_FOLDER = Path.joinpath(DATA_PATH, r'cropped_cars_test')
-MODEL = Path(r'models')
+MODEL_PATH = Path(r'..\..\..\models')
 DEVKIT = Path.joinpath(DATA_PATH, r'devkit')
 BATCH_SIZE = 8
 IMAGE_SIZE = 224
@@ -57,14 +57,19 @@ def main(args):
                                 batchsize=BATCH_SIZE,
                                 testratio=TEST_RATIO)
 
-    # 3. Build a model based on specifications
+    # 3. Build a model
     learner = learnerbuild.build_learn(data)
 
-    # 4. Fit the model
-    learnerfit.learn_fit(learner, EPOCHS)
+    # 4. Fit if specified
+    if (args.train):
+        # fit the model for the first time
+        learnerfit.learn_fit(learner, EPOCHS, 1, MODEL_PATH)
 
 def parse_arguments(argv):
     parser = argparse.ArgumentParser()
+
+    parser.add_argument('--train',
+                        default=True)
 
     parser.add_argument('--crop',
                         default=False)
@@ -73,4 +78,25 @@ def parse_arguments(argv):
 
 
 if __name__ == "__main__":
-    main(parse_arguments(sys.argv[1:]))
+    #main(parse_arguments(sys.argv[1:])
+    args = parse_arguments(sys.argv[1:])
+
+    # 1. Import data into dataframe (filename, class) and also the meta labels
+    train_df = dataimport.ImportMetaIntoDF(DEVKIT, TRAIN_FOLDER, CROPPED_TRAIN_FOLDER, args.crop)
+    # number of classes from the metalabels list taken from cars_train_annos
+    n_class = len(train_df['class'])
+
+    # 2. Build data split for generator to flow and train test split
+    data = datasplit.data_split(train_df,
+                                CROPPED_TRAIN_FOLDER,
+                                imagesize=224,
+                                batchsize=BATCH_SIZE,
+                                testratio=TEST_RATIO)
+
+    # 3. Build a model
+    learner = learnerbuild.build_learn(data)
+
+    # 4. Fit if specified
+    if (args.train):
+        # fit the model for the first time
+        learnerfit.learn_fit(learner, EPOCHS, 1, MODEL_PATH)
