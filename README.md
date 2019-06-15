@@ -128,6 +128,7 @@ epoch | train_loss | valid_loss | error_rate | time
 
 Loss plot
 ![image](md/losses.png)
+<br>
 Looking at both the training history and losses plot above, the model trained decently well. The final accuracy of the
 train test validation is at **(1 - error_rate) ==> (1 - 0.142506)** which got us to the accuracy of **85.75%**<br>
 We can also take a look at the loss plot and see that both validation and training losses decrease at the same rate, 

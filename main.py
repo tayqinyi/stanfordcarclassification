@@ -27,7 +27,7 @@ import dataimport, datasplit, learnerbuild, learnerfit, learnerpredict
 import os
 import argparse, sys
 import time
-
+import numpy as np
 # Datapath, change it to the local data path
 # Note, I extracted cars_test, cars_train and
 # devkit folders into a folder 'data' same as the scripts
@@ -118,6 +118,10 @@ def parse_arguments(argv):
                         default=False,
                         help='Specify whether we want to crop the images during data import, should only specify this as true first time running this script')
 
+    parser.add_argument('--finetune',
+                        default=False,
+                        help='Specify whether we want to finetune the model')
+
     return parser.parse_args(argv)
 
 
@@ -147,7 +151,7 @@ if __name__ == "__main__":
                                 test_df,
                                 CROPPED_TRAIN_FOLDER,
                                 CROPPED_TEST_FOLDER,
-                                imagesize=224,
+                                imagesize=IMAGE_SIZE,
                                 batchsize=BATCH_SIZE,
                                 testratio=TEST_RATIO
                                 )
@@ -165,28 +169,35 @@ if __name__ == "__main__":
     '''
     Part 3. Fit or load a model we have trained, fit will also execute finetune
     '''
-    if(args.train):
-        print('============== Part 3 Fit model start ==============')
-    else:
-        print('============== Part 3 Train = False ==> Load latest model start ==============')
     # Fit if specified
     if (args.train):
+        print('============== Part 3 Fit model start ==============')
         # fit the model for the first time
-        learnerfit.learn_fit(learner, EPOCHS, 1, MODEL_PATH)
+        learnerfit.learn_fit(learner, MODEL_PATH, EPOCHS, 1e-6)
+        print('============== Part 3 Fit model done! ==============')
     else:
+        print('============== Part 3 Train = False ==> Load latest model start ==============')
         # load the latest model
         files = os.listdir(MODELS_PATH)
         paths = [os.path.join(MODELS_PATH, basename) for basename in files]
         path = os.path.splitext(max(paths, key=os.path.getctime))[0]
         learner.load(file=os.path.join(r'..\..\..', path))
-    if(args.train):
-        print('============== Part 3 Fit model done! ==============')
-    else:
         print('============== Part 3 Train = False ==> Load latest model done! ==============')
 
-    # Fine tune by adjusting learning rate
-    #learner.unfreeze()
-    #learner.fit_one_cycle(2, max_lr=slice(1e-5, 1e-4))
+    if (args.finetune):
+        print('============== Part 3a Learning rate finetuning start ==============')
+        # Unfreeze the model, use fastai lr_find method to find the learning rate
+        # in which the learning rate drops the most, over here i coded them in
+        # after observing in the learning rate plot
+        learner.unfreeze()
+        learner.lr_find()
+        lr = 1e-4
+        lrs = np.array([lr / 100, lr / 10, lr])
+        learnerfit.learn_fit(learner, MODEL_PATH, EPOCHS, lrs)
+        print('============== Part 3a Learning rate finetuning done! ==============')
+        print('============== Part 3b Upscaling finetuning start ==============')
+
+        print('============== Part 3b Upscaling finetuning done! ==============')
 
     '''
     Part 4. Do prediction on the test data and output into a text file
