@@ -93,9 +93,40 @@ For the first training, we do it with default hyperparameters and give a large e
 we will rely on EarlyStopping to detect when the training is no longer improving the model. During my run after about 
 30 epochs, we get the following results:
 
+epoch | train_loss | valid_loss | error_rate | time
+--- | --- | --- | --- | ---
+0 | 5.506438 | 4.993631 | 0.964373 | 05:10     
+1 | 4.930608 | 4.384122 | 0.889435 | 04:58     
+2 | 4.266478 | 3.639033 | 0.751843 | 05:04     
+3 | 3.651903 | 2.962635 | 0.647420 | 05:17     
+4 | 3.083017 | 2.336170 | 0.544840 | 05:07     
+5 | 2.650666 | 1.854763 | 0.451474 | 05:05     
+6 | 2.300126 | 1.639489 | 0.409091 | 05:05     
+7 | 2.100447 | 1.481063 | 0.367936 | 05:06     
+8 | 1.919847 | 1.367549 | 0.353808 | 05:07     
+9 | 1.709594 | 1.177967 | 0.303440 | 05:06     
+10 | 1.757606 | 1.184764 | 0.303440 | 05:06     
+11 | 1.488935 | 1.091771 | 0.293612 | 05:04     
+12 | 1.410809 | 1.059965 | 0.275799 | 05:07     
+13 | 1.387043 | 1.542177 | 0.298526 | 05:05     
+14 | 1.352265 | 0.939426 | 0.252457 | 05:05     
+15 | 1.336027 | 0.852492 | 0.225430 | 05:05     
+16 | 1.032693 | 0.796461 | 0.208231 | 05:08     
+17 | 0.998848 | 0.780795 | 0.206388 | 05:18     
+18 | 0.997983 | 0.765310 | 0.198403 | 05:17     
+19 | 0.950053 | 0.683487 | 0.179361 | 05:11     
+20 | 0.782920 | 0.658431 | 0.172604 | 05:12     
+21 | 0.684390 | 0.663369 | 0.174447 | 05:12     
+22 | 0.580004 | 0.620787 | 0.158477 | 05:09     
+23 | 0.673740 | 0.621174 | 0.159091 | 05:14     
+24 | 0.575732 | 0.591690 | 0.155405 | 05:12     
+25 | 0.565011 | 0.574709 | 0.149263 | 05:17     
+26 | 0.511615 | 0.565591 | 0.149877 | 05:17     
+27 | 0.510080 | 0.561429 | 0.144963 | 05:14     
+28 | 0.513708 | 0.626043 | 0.162776 | 05:11     
+29 | 0.467615 | 0.570266 | 0.142506 | 05:12 |
 
-Loss plot
-![image](md/losses.png)
+Loss plot![image](md/losses.png)
 Looking at both the training history and losses plot above, the model trained decently well. The final accuracy of the
 train test validation is at **(1 - error_rate) ==> (1 - 0.142506)** which got us to the accuracy of **85.75%**<br>
 We can also take a look at the loss plot and see that both validation and training losses decrease at the same rate, 
