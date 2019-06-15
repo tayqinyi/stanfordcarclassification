@@ -125,17 +125,7 @@ epoch | train_loss | valid_loss | error_rate | time
 27 | 0.510080 | 0.561429 | 0.144963 | 05:14     
 28 | 0.513708 | 0.626043 | 0.162776 | 05:11     
 29 | 0.467615 | 0.570266 | 0.142506 | 05:12
-
-
-
-
-
-
-
-
-
-
-
+<br>
 Loss plot
 ![image](md/losses.png)
 Looking at both the training history and losses plot above, the model trained decently well. The final accuracy of the
