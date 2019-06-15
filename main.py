@@ -123,12 +123,18 @@ def parse_arguments(argv):
 
 if __name__ == "__main__":
     #main(parse_arguments(sys.argv[1:])
+    # create folders
+    if(not os.path.exists(MODELS_PATH)):
+        os.makedirs(MODELS_PATH, exist_ok=True)
+    if(not os.path.exists(MODELS_PATH)):
+        os.makedirs(PREDICTION_PATH, exist_ok=True)
+
     args = parse_arguments(sys.argv[1:])
     print(args)
     '''
     Part 1. Data import, processing
     '''
-    print('============== Part 1 Data import, processing ==============', args)
+    print('============== Part 1 Data import, processing ==============')
     # Import data into dataframe (filename, class) and also the meta labels
     train_df, test_df = dataimport.ImportMetaIntoDF(DEVKIT, TRAIN_FOLDER, TEST_FOLDER, CROPPED_TRAIN_FOLDER, CROPPED_TEST_FOLDER, args.crop)
 
@@ -145,24 +151,24 @@ if __name__ == "__main__":
                                 batchsize=BATCH_SIZE,
                                 testratio=TEST_RATIO
                                 )
-    print('============== Part 1 Data import, processing done! ==============', args)
+    print('============== Part 1 Data import, processing done! ==============')
 
-    print('============== Part 2 Model building start ==============', args)
+    print('============== Part 2 Model building start ==============')
     '''
     Part 2. Construct a model
     '''
     # Build a model
     learner = learnerbuild.build_learn(data)
-    print('============== Part 2 Model building done! ==============', args)
+    print('============== Part 2 Model building done! ==============')
 
 
     '''
     Part 3. Fit or load a model we have trained, fit will also execute finetune
     '''
     if(args.train):
-        print('============== Part 3 Fit model start ==============', args)
+        print('============== Part 3 Fit model start ==============')
     else:
-        print('============== Part 3 Train = False ==> Load latest model start ==============', args)
+        print('============== Part 3 Train = False ==> Load latest model start ==============')
     # Fit if specified
     if (args.train):
         # fit the model for the first time
@@ -174,9 +180,9 @@ if __name__ == "__main__":
         path = os.path.splitext(max(paths, key=os.path.getctime))[0]
         learner.load(file=os.path.join(r'..\..\..', path))
     if(args.train):
-        print('============== Part 3 Fit model done! ==============', args)
+        print('============== Part 3 Fit model done! ==============')
     else:
-        print('============== Part 3 Train = False ==> Load latest model done! ==============', args)
+        print('============== Part 3 Train = False ==> Load latest model done! ==============')
 
     # Fine tune by adjusting learning rate
     #learner.unfreeze()
@@ -185,7 +191,7 @@ if __name__ == "__main__":
     '''
     Part 4. Do prediction on the test data and output into a text file
     '''
-    print('============== Part 4 Prediction start ==============', args)
+    print('============== Part 4 Prediction start ==============')
     # Predict
     predictions = learnerpredict.predict(learner)
     # write result to the predictions folder
@@ -195,4 +201,4 @@ if __name__ == "__main__":
         for i in predictions:
             output.write(i + '\n')
     print('============== Part 4 Predicting done! ==============', args)
-    print('============== All done! Please view the latest prediction output in the predictions folder ==============', args)
+    print('============== All done! Please view the latest prediction output in the predictions folder ==============')
