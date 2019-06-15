@@ -11,9 +11,9 @@ def data_split(train_df, test_df, train_dir, test_dir, imagesize, batchsize, tes
     preprocess = get_transforms()
 
     test = ImageList.from_df(test_df, test_dir, cols='fname')
-    src = (ImageList.from_df(train_df, train_dir, cols='fname')).split_by_rand_pct(valid_pct=testratio, seed=42).label_from_df(cols='class').add_test(test)
+    train = (ImageList.from_df(train_df, train_dir, cols='fname')).split_by_rand_pct(valid_pct=testratio, seed=42).label_from_df(cols='class').add_test(test)
 
-    data = (src.transform(preprocess, size=imagesize)
+    data = (train.transform(preprocess, size=imagesize)
             .databunch()
             .normalize(imagenet_stats))
 
