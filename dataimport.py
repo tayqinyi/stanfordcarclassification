@@ -2,41 +2,53 @@
 Import meta data into dataframe
 '''
 import os
-from pathlib import Path
 import scipy.io as sio
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
 from PIL import Image
 
 # Read output file annotation
 # Change the datapath here
-def ImportMetaIntoDF(devkit, img_path, cropped_img_path, crop):
-
-    meta_path = Path.joinpath(devkit, r'cars_meta.mat')
-    mat_contents = sio.loadmat(meta_path)
-    meta_labels = np.ravel((mat_contents['class_names']).tolist())
+def ImportMetaIntoDF(devkit, train_path, test_path, cropped_train_path, cropped_test_path, crop):
 
     # Train images meta file read into a dataframe
-    annos_path = Path.joinpath(devkit, r'cars_train_annos.mat')
-    training_data_meta_contents = sio.loadmat(annos_path)
-    training_data_df = pd.DataFrame();
-    training_data_fields = ['bbox_x1', 'bbox_y1', 'bbox_x2', 'bbox_y2', 'class', 'fname']
-    for field in training_data_fields:
-        training_data_df[field] = np.ravel((training_data_meta_contents['annotations'][field]).tolist())
-    training_data_df['class']=training_data_df['class'].astype(str)
+    train_data_df, test_data_df = pd.DataFrame(), pd.DataFrame();
+    train_annos_path = os.path.join(devkit, r'cars_train_annos.mat')
+    test_annos_path = os.path.join(devkit, r'cars_test_annos.mat')
+
+    train_meta_contents = sio.loadmat(train_annos_path)
+    test_meta_contents = sio.loadmat(test_annos_path)
+    test_data_fields = ['bbox_x1', 'bbox_y1', 'bbox_x2', 'bbox_y2', 'fname']
+    train_data_fields = test_data_fields.copy().append('class')
+
+    for field in test_data_fields:
+        train_data_df[field] = np.ravel((train_meta_contents['annotations'][field]).tolist())
+        test_data_df[field] = np.ravel((test_meta_contents['annotations'][field]).tolist())
+    train_data_df['class'] = np.ravel((train_meta_contents['annotations']['class']).tolist())
+    train_data_df['class']=train_data_df['class'].astype(str)
 
     # Crop images according to the annos
     if(crop):
-        if(not os.path.exists(cropped_img_path)):
-            os.makedirs(cropped_img_path, exist_ok=True)
+        if(not os.path.exists(cropped_train_path)):
+            os.makedirs(cropped_train_path, exist_ok=True)
+        if(not os.path.exists(cropped_test_path)):
+            os.makedirs(cropped_test_path, exist_ok=True)
 
-        for index, row in training_data_df.iterrows():
-            source_path = Path.joinpath(img_path, row['fname'])
+        # Crop train images
+        for index, row in train_data_df.iterrows():
+            source_path = os.path.join(train_path, row['fname'])
             image = Image.open(source_path)
             image = image.crop((row['bbox_x1'], row['bbox_y1'], row['bbox_x2'], row['bbox_y2']))
-            target_path = Path.joinpath(cropped_img_path, row['fname'])
+            target_path = os.path.join(cropped_train_path, row['fname'])
             image.save(target_path)
 
-    return training_data_df
+        # Crop test images
+        for index, row in test_data_df.iterrows():
+            source_path = os.path.join(test_path, row['fname'])
+            image = Image.open(source_path)
+            image = image.crop((row['bbox_x1'], row['bbox_y1'], row['bbox_x2'], row['bbox_y2']))
+            target_path = os.path.join(cropped_test_path, row['fname'])
+            image.save(target_path)
+
+    return train_data_df, test_data_df
 

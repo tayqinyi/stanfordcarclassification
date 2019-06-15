@@ -5,12 +5,13 @@ and build generators out of them
 from fastai.vision import *
 
 # data flow from dataframe
-def data_split(dataframe, directory, imagesize, batchsize, testratio):
+def data_split(train_df, test_df, train_dir, test_dir, imagesize, batchsize, testratio):
 
     # preprocessing function from fastai
     preprocess = get_transforms()
-    
-    src = (ImageList.from_df(dataframe, directory, cols='fname')).split_by_rand_pct(valid_pct=testratio, seed=42).label_from_df(cols='class')
+
+    test = ImageList.from_df(test_df, test_dir, cols='fname')
+    src = (ImageList.from_df(train_df, train_dir, cols='fname')).split_by_rand_pct(valid_pct=testratio, seed=42).label_from_df(cols='class').add_test(test)
 
     data = (src.transform(preprocess, size=imagesize)
             .databunch()

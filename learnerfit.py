@@ -1,9 +1,11 @@
 '''
 fit a model based on the param
 '''
-from pathlib import Path
+import os
+import time
 
 def learn_fit(learn, epochs, stage, modelpath):
     lr = 1e-3
     learn.fit_one_cycle(epochs, max_lr = lr)
-    learn.save(file=Path.joinpath(modelpath, 'stage - ' + str(stage)))
+    timestamp = time.strftime("%Y%m%d-%H%M%S")
+    learn.save(file=os.path.join(modelpath, timestamp))
