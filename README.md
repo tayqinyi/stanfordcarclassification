@@ -20,7 +20,7 @@ The dataset used is the [Stanford cars dataset](https://ai.stanford.edu/~jkrause
 the train, test and devkit.
 ![image](md/intro_1.png)
 Export and place them in the project folder in the follwing structure
-```python
+```text
 \---data
     +---cars_test
         +---00001.jpg
@@ -40,7 +40,7 @@ Export and place them in the project folder in the follwing structure
  ...
  ---README.md
 ```
- **Note: This is about it for the setup, if you just wanna run the script, you can skip to [section 5](#h3-5-script-execution).**
+ **Note: This is about it for the setup, if you just wanna run the script, you can skip to [section 4](#h3-4-user-guide).**
 # <h3> 2. Data exploration
 ![image](md/train_annos.JPG)
 First, a peak into the annos files let us know the data format given. There is going to be a pandas dataframe like  sturctured
@@ -61,7 +61,7 @@ This is done so in the file [dataimport.py](dataimport.py). Below is an image co
 ![original](md/original.jpg)  | ![cropped](md/cropped.jpg)
 # <h4> ii. Data import and cropping
 This is done so in the file [datasplit.py](datasplit.py).
-```python
+```text
 preprocess = get_transforms()
 test = ImageList.from_df(test_df, test_dir, cols='fname')
 train = (ImageList.from_df(train_df, train_dir, cols='fname')).split_by_rand_pct(valid_pct=testratio, seed=50).label_from_df(cols='class').add_test(test)
@@ -74,7 +74,7 @@ In the above code, we create 'generators' to retrive data from train and test da
 train and validation set by the specified ratio (default=0.2). We also applied transformation (zoom, flip, etc) and normalize the
 image gradient to normalize the pixels impact. For those that are not familiar with fastai dataset. The data object 
 now contains 3 datasets inside:
-```python
+```text
 >>> data.train_ds, data.valid_ds, data.test_ds
 (LabelList (6516 items), (LabelList (1628 items), (LabelList (8041 items)) 
 ```
@@ -82,14 +82,14 @@ now contains 3 datasets inside:
 # <h4> iii. Model preparation
 This is done so in the file [learnerbuild.py](learnerbuild.py)
 
-```python
+```text
 base_model = models.resnet152
 callbacks = [partial(EarlyStoppingCallback, monitor='valid_loss', min_delta=0.01, patience=8)]
 learn = cnn_learner(data, base_model, metrics=[error_rate], callback_fns=callbacks)
 ```
 In this setup, we will the pretrained resnet152 as our base model, add a few layers after it to adapt it to our classification. 
 We also added an Early stopping callback monitoring validation loss to prevent overfitting. Below is a small snapshot of the model summary:
-```python
+```text
 Sequential
 ======================================================================
 Layer (type)         Output Shape         Param #    Trainable 
@@ -152,7 +152,7 @@ showing no sign of overfitting. However, there are a few things we may do to fur
 # <h4> v. Fine tune training
 I fine tuned the model by adjusting the learning rate, which is the most impactful hyperparameter. To do this, I used the 
 lr_find in the fastai library:
-```python
+```text
 learner.unfreeze()
 learner.lr_find()
 learner.recorder.plot()
@@ -161,7 +161,7 @@ learner.recorder.plot()
 Looking at the loss vs learning rate plot, we want to locate the section for which the loss declines or stays the same, 
 seemed to be in the range of (1e-6, 1e-4). Now we fit the model again with the new learning rates. The slice method distributed
 the learning rates range across the layers in the network:
-```python
+```text
 lrs = slice(1e-6, 1e-4)
 learnerfit.learn_fit(learner, MODEL_PATH, EPOCHS, lrs)
 ```
@@ -194,14 +194,15 @@ As we can see, the accuracy has been improved to **88.01%**.
 There are a few more things we may do such as mixup, upscaling, etc., but we will come back to those in a later date.
 # <h4> vi. Prediction and submission
 For testing, we use the model to predict on the test dataset by doing
-```python
+```text
 learner.get_preds(DatasetType.Test)
 ```
 The result will be parsed and written to a new file in the predictions folder. We can then submit it to the stanford
 submission link. This is [my link](http://imagenet.stanford.edu/internal/car196/submission/submission?p=b49b6dd38c944ca03ed02686917045f5) and a snapshot of the results.
+![image](md/submission.JPG)
 # <h3> 4. User guide
 The execution is done through [main.py](main.py). The file takes 3 arguments:
-```python
+```text
 --crop      Whether we would crop the image and save to the cropped image folder (only need this as true for the first time)
 --train     Whther we would perform training
 --finetune  Whether we would finetune the model
@@ -210,7 +211,7 @@ By default, they are all false, when [main.py](main.py) is executed without any 
 in the models folder and run prediction on the test data. 
 To download the model that provides the results in this repo, please visit [this link](https://drive.google.com/drive/folders/1WIk1GdJ82o9ZUZLeaV0jGsHlyRMdz9kf) and afterwards place the model in the models
 folders.
-```python
+```text
 \---data
  ---md
  ---models
@@ -226,16 +227,16 @@ So here is exactly how one gets [main.py](main.py) to run:
 2. Download the data from stanford site and extract them into the **data** folder
 3. From here there are two options:
    1. Train the model with main.py, you would do (finetune is optional)
-      ```python
+      ```text
       python main.py --crop=True, --train=True, --finetune=True
       ```
    2. Use the final model that I trained, please download it from my [google drive](https://drive.google.com/drive/folders/1WIk1GdJ82o9ZUZLeaV0jGsHlyRMdz9kf) and place it in the models folder
-      ```python
+      ```text
       python main.py --crop=True
       ```
 After the script finished running, you may take the latest files in the predictions folder and either submit or study them.
 To study the model more, in the interactive console, you may do:
-```python
+```text
 learner.summary()
 ```
 to get the model statistics.
