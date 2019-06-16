@@ -4,17 +4,17 @@ make and model of cars. The pretrained model **resnet152** is used as the based 
 of it to adapt it to our images. After training, finetuning, the resulting accuracy performed on the test set is
  **88.01%**.
 # <h2> Table of contents  
-1. [Introduction](#h3-1-intoduction)
-2. [Data exploration](#h3-2-data-exploration)
-3. [Training regime](#h3-3-training-regime)
-   1. [Data import and cropping](#h4-i-data-import-and-cropping)
-   2. [Data transformation and cross validation](#h4-ii-data-import-and-cropping)
-   3. [Model preparation](#h4-iii-model-preparation)
-   4. [First training](#h4-iv-first-training)
-   5. [Finetuned training](#h4-v-fine-tune-training)
-   6. [Prediction and submission](#h4-vi-prediction-and-submission)
-4. [User guide](#h3-4-user-guide)
-5. [Conclusion](#h3-5-conclusion)
+1. [Introduction](#user-content--1-intoduction)
+2. [Data exploration](#user-content--2-data-exploration)
+3. [Training regime](#user-content--3-training-regime)
+   1. [Data import and cropping](#user-content--i-data-import-and-cropping)
+   2. [Data transformation and cross validation](#user-content--ii-data-transformation-and-cross-validation)
+   3. [Model preparation](#user-content--iii-model-preparation)
+   4. [First training](#user-content--iv-first-training)
+   5. [Finetuned training](#user-content--v-fine-tune-training)
+   6. [Prediction and submission](#user-content--vi-prediction-and-submission)
+4. [User guide](#user-content--4-user-guide)
+5. [Conclusion](#user-content--5-conclusion)
 # <h3> 1. Intoduction
 The dataset used is the [Stanford cars dataset](https://ai.stanford.edu/~jkrause/cars/car_dataset.html). I downloaded 
 the train, test and devkit.
@@ -40,7 +40,7 @@ Export and place them in the project folder in the follwing structure
  ...
  ---README.md
 ```
- **Note: This is about it for the setup, if you just wanna run the script, you can skip to [section 4](#h3-4-user-guide).**
+ **Note: This is about it for the setup, if you just wanna run the script, you can skip to [section 4](#user-content--4-user-guide).**
 # <h3> 2. Data exploration
 ![image](md/train_annos.JPG)
 First, a peak into the annos files let us know the data format given. There is going to be a pandas dataframe like  sturctured
@@ -59,7 +59,7 @@ This is done so in the file [dataimport.py](dataimport.py). Below is an image co
  Original             |  Cropped
 :-------------------------:|:-------------------------:
 ![original](md/original.jpg)  | ![cropped](md/cropped.jpg)
-# <h4> ii. Data import and cropping
+# <h4> ii. Data transformation and cross validation
 This is done so in the file [datasplit.py](datasplit.py).
 ```text
 preprocess = get_transforms()
