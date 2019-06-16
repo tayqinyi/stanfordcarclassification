@@ -2,7 +2,7 @@
 This repository contains the findings about using transfer learning to adapt a model to perform classification on the 
 make and model of cars. The pretrained model **resnet152** is used as the based and we added extra layers at the end 
 of it to adapt it to our images. After training, finetuning, the resulting accuracy performed on the test set is
-**85.37%**.
+ **88.01%**.
 # <h2> Table of contents  
 1. [Introduction](#h3-1-intoduction)
 2. [Data exploration](#h3-2-data-exploration)
@@ -21,10 +21,26 @@ The dataset used is the [Stanford cars dataset](https://ai.stanford.edu/~jkrause
 the train, test and devkit.
 ![image](md/intro_1.png)
 Export and place them in the project folder in the follwing structure
-<br>
-<br>
-![image](md/folder_struct.JPG)
- <br>
+```python
+\---data
+    +---cars_test
+        +---00001.jpg
+        +---00002.jpg
+	...
+    +---cars_train
+        +---00001.jpg
+        ...
+    +---devkit
+        +---cars_meta.mat
+        ...
+ ---md
+ ---models
+ ---predictions
+ ---dataimport.py
+ ---datasplit.py
+ ...
+ ---README.md
+```
  **Note: This is about it for the setup, if you just wanna run the script, you can skip to [section 5](#h3-5-script-execution).**
 # <h3> 2. Data exploration
 ![image](md/train_annos.JPG)
@@ -133,5 +149,93 @@ Looking at both the training history and losses plot above, the model trained de
 train test validation is at **(1 - error_rate) ==> (1 - 0.142506)** which got us to the accuracy of **85.75%**<br>
 We can also take a look at the loss plot and see that both validation and training losses decrease at the same rate, 
 showing no sign of overfitting. However, there are a few things we may do to further finetune the model.
+
+# <h4> v. Fine tune training
+I fine tuned the model by adjusting the learning rate, which is the most impactful hyperparameter. To do this, I used the 
+lr_find in the fastai library:
+```python
+learner.unfreeze()
+learner.lr_find()
+learner.recorder.plot()
+```
+![image](md/lr_find.png)
+Looking at the loss vs learning rate plot, we want to locate the section for which the loss declines or stays the same, 
+seemed to be in the range of (1e-6, 1e-4). Now we fit the model again with the new learning rates. The slice method distributed
+the learning rates range across the layers in the network:
+```python
+lrs = slice(1e-6, 1e-4)
+learnerfit.learn_fit(learner, MODEL_PATH, EPOCHS, lrs)
+```
+We get the following results:
+
+epoch|train_loss|valid_loss|error_rate|time
+:-----:|:-----:|:-----:|:-----:|:-----:
+0|0.448493|0.558452|0.146192|06:54
+1|0.531526|0.566870|0.145577|06:43
+2|0.504912|0.578037|0.155405|06:43
+3|0.588912|0.574732|0.153563|06:44
+4|0.518589|0.572812|0.146806|06:45
+5|0.501655|0.588574|0.157862|06:45
+6|0.574097|0.576374|0.160319|06:49
+7|0.491169|0.562954|0.151106|06:54
+8|0.426365|0.576896|0.152334|06:51
+9|0.412379|0.542437|0.151106|06:44
+10|0.368797|0.539593|0.147420|06:52
+11|0.348959|0.517515|0.137592|06:49
+12|0.329214|0.512681|0.140049|06:46
+13|0.304751|0.502846|0.125307|06:47
+14|0.289668|0.489356|0.126536|06:57
+15|0.240541|0.487552|0.124693|06:54
+16|0.256081|0.506890|0.125307|06:44
+17|0.250703|0.488750|0.122850|06:42
+18|0.229645|0.489429|0.128378|06:44
+19|0.218732|0.485684|0.119779|06:38
+
+As we can see, the accuracy has been improved to **88.01%**.
+There are a few more things we may do such as mixup, upscaling, etc., but we will come back to those in a later date.
+# <h4> vi. Prediction and submission
+
 # <h3> 5. Script execution
-# Place 2
+The execution is done through [main.py](main.py). The file takes 3 arguments:
+```python
+--crop      Whether we would crop the image and save to the cropped image folder (only need this as true for the first time)
+--train     Whther we would perform training
+--finetune  Whether we would finetune the model
+```
+By default, they are all false, when [main.py](main.py) is executed without any arguments. It would try to load the latest model
+in the models folder and run prediction on the test data. 
+To download the model that provides the results in this repo, please visit [this link](https://drive.google.com/drive/folders/1WIk1GdJ82o9ZUZLeaV0jGsHlyRMdz9kf) and afterwards place the model in the models
+folders.
+```python
+\---data
+ ---md
+ ---models
+    +---20190616-030705.pth
+ ---predictions
+ ---dataimport.py
+ ---datasplit.py
+ ...
+ ---README.md
+```
+So here is exactly how one gets [main.py](main.py) to run:
+1. Clone the repo, create folders **models**, **data**
+2. Download the data from stanford site and extract them into the **data** folder
+3. From here there are two options:
+   1. Train the model with main.py, you would do (finetune is optional)
+      ```python
+      python main.py --crop=True, --train=True, --finetune=True
+      ```
+   2. Use the final model that I trained, please download it from my [google drive](https://drive.google.com/drive/folders/1WIk1GdJ82o9ZUZLeaV0jGsHlyRMdz9kf) and place it in the models folder
+      ```python
+      python main.py --crop=True
+
+      ```
+After the script finished running, you may take the latest files in the predictions folder and either submit or study them.
+To study the model more, in the interactive console, you may do:
+```python
+learner.summary()
+```
+to get the model statistics.
+# <h3> 6. Conclusion
+Transfer learning is such a powerful technique, it gets us decently good results with limited number of samples and training
+time. Thanks to it, we are able to get a decent result (**88.01%**) on the stanford cars dataset in a short time.
