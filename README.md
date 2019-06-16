@@ -8,14 +8,13 @@ of it to adapt it to our images. After training, finetuning, the resulting accur
 2. [Data exploration](#h3-2-data-exploration)
 3. [Training regime](#h3-3-training-regime)
    1. [Data import and cropping](#h4-i-data-import-and-cropping)
-   2. Data transformation and cross validation
-   3. Model preparation
-   4. First training
-   5. Finetuned training
-   6. Prediction and submission
-4. Results
-5. Script execution
-6. Conclusion
+   2. [Data transformation and cross validation](#h4-ii-data-import-and-cropping)
+   3. [Model preparation](#h4-iii-model-preparation)
+   4. [First training](#h4-iv-first-training)
+   5. [Finetuned training](#h4-v-fine-tune-training)
+   6. [Prediction and submission](#h4-vi-prediction-and-submission)
+4. [User guide](#h3-4-user-guide)
+5. [Conclusion](#h3-5-conclusion)
 # <h3> 1. Intoduction
 The dataset used is the [Stanford cars dataset](https://ai.stanford.edu/~jkrause/cars/car_dataset.html). I downloaded 
 the train, test and devkit.
@@ -76,8 +75,8 @@ train and validation set by the specified ratio (default=0.2). We also applied t
 image gradient to normalize the pixels impact. For those that are not familiar with fastai dataset. The data object 
 now contains 3 datasets inside:
 ```python
-data.train_ds, data.valid_ds, data.test_ds
->>> (LabelList (6516 items), (LabelList (1628 items), (LabelList (8041 items)) 
+>>> data.train_ds, data.valid_ds, data.test_ds
+(LabelList (6516 items), (LabelList (1628 items), (LabelList (8041 items)) 
 ```
 
 # <h4> iii. Model preparation
@@ -194,8 +193,13 @@ epoch|train_loss|valid_loss|error_rate|time
 As we can see, the accuracy has been improved to **88.01%**.
 There are a few more things we may do such as mixup, upscaling, etc., but we will come back to those in a later date.
 # <h4> vi. Prediction and submission
-
-# <h3> 5. Script execution
+For testing, we use the model to predict on the test dataset by doing
+```python
+learner.get_preds(DatasetType.Test)
+```
+The result will be parsed and written to a new file in the predictions folder. We can then submit it to the stanford
+submission link. This is [my link](http://imagenet.stanford.edu/internal/car196/submission/submission?p=b49b6dd38c944ca03ed02686917045f5) and a snapshot of the results.
+# <h3> 4. User guide
 The execution is done through [main.py](main.py). The file takes 3 arguments:
 ```python
 --crop      Whether we would crop the image and save to the cropped image folder (only need this as true for the first time)
@@ -228,7 +232,6 @@ So here is exactly how one gets [main.py](main.py) to run:
    2. Use the final model that I trained, please download it from my [google drive](https://drive.google.com/drive/folders/1WIk1GdJ82o9ZUZLeaV0jGsHlyRMdz9kf) and place it in the models folder
       ```python
       python main.py --crop=True
-
       ```
 After the script finished running, you may take the latest files in the predictions folder and either submit or study them.
 To study the model more, in the interactive console, you may do:
@@ -236,6 +239,6 @@ To study the model more, in the interactive console, you may do:
 learner.summary()
 ```
 to get the model statistics.
-# <h3> 6. Conclusion
+# <h3> 5. Conclusion
 Transfer learning is such a powerful technique, it gets us decently good results with limited number of samples and training
 time. Thanks to it, we are able to get a decent result (**88.01%**) on the stanford cars dataset in a short time.
