@@ -42,7 +42,7 @@ Export and place them in the project folder in the follwing structure
 ```
  **Note: This is about it for the setup, if you just wanna run the script, you can skip to [section 4](#user-content--4-user-guide).**
 # <h3> 2. Data exploration
-![image](md/train_annos.JPG)
+![image](md/train_annos.JPG)<br>
 First, a peak into the annos files let us know the data format given. There is going to be a pandas dataframe like  sturctured
 which we will flow our images from. The table also contains information about the bounding box of the cars in their images.
 Next, we also need to check the classes distribution to determine if there's any data balancing required
