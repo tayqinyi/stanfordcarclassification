@@ -142,8 +142,7 @@ epoch | train_loss | valid_loss | error_rate | time
 29 | 0.467615 | 0.570266 | 0.142506 | 05:12 |
 
 Loss plot<br>
-![image](md/losses.png)
-<br>
+![image](md/losses.png)<br>
 Looking at both the training history and losses plot above, the model trained decently well. The final accuracy of the
 train test validation is at **(1 - error_rate) ==> (1 - 0.142506)** which got us to the accuracy of **85.75%**<br>
 We can also take a look at the loss plot and see that both validation and training losses decrease at the same rate, 
@@ -157,7 +156,7 @@ learner.unfreeze()
 learner.lr_find()
 learner.recorder.plot()
 ```
-![image](md/lr_find.png)
+![image](md/lr_find.png)<br>
 Looking at the loss vs learning rate plot, we want to locate the section for which the loss declines or stays the same, 
 seemed to be in the range of (1e-6, 1e-4). Now we fit the model again with the new learning rates. The slice method distributed
 the learning rates range across the layers in the network:
