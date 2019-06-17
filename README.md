@@ -19,7 +19,7 @@ of it to adapt it to our images. After training, finetuning, the resulting accur
 The dataset used is the [Stanford cars dataset](https://ai.stanford.edu/~jkrause/cars/car_dataset.html). I downloaded 
 the train, test and devkit.
 ![image](md/intro_1.png)
-Export and place them in the project folder in the follwing structure
+Export and place them in the project folder in the following structure
 ```text
 \---data
     +---cars_test
