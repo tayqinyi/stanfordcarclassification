@@ -50,7 +50,7 @@ def main(args):
     # create folders
     if(not os.path.exists(MODELS_PATH)):
         os.makedirs(MODELS_PATH, exist_ok=True)
-    if(not os.path.exists(MODELS_PATH)):
+    if(not os.path.exists(PREDICTION_PATH)):
         os.makedirs(PREDICTION_PATH, exist_ok=True)
 
     args = parse_arguments(sys.argv[1:])
