@@ -223,8 +223,12 @@ folders.
 ```
 So here is exactly how one gets [main.py](main.py) to run:
 1. Clone the repo, create folders **models**, **data**
-2. Download the data from stanford site and extract them into the **data** folder
-3. From here there are two options:
+2. Install required libraries by running 
+<pre>
+pip install -r <b>'path to the requirements.txt'</b>
+</pre>
+3. Download the data from stanford site and extract them into the **data** folder
+4. From here there are two options:
    1. Train the model with main.py, you would do (finetune is optional)
       ```text
       python main.py --crop=True, --train=True, --finetune=True
