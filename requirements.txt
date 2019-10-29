@@ -2,4 +2,4 @@ fastai==1.0.53.post2
 pandas==0.24.2
 scipy==1.3.0
 numpy==1.16.4
-Pillow==6.0.0
+Pillow==6.2.0
